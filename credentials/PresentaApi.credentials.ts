@@ -20,11 +20,13 @@ export class PresentaApi implements ICredentialType {
 
     test = {
         request: {
-            method: 'GET' as IHttpRequestMethods,
-            url: 'https://www.presenta.cc/api/status',
+            method: 'POST' as IHttpRequestMethods,
+            url: 'https://www.presenta.cc/api/render/presenta_baed0579-1df4-475f-bfb1-019b45abcac3',
             headers: {
                 Authorization: '=Bearer {{$credentials.token}}',
+                'Content-Type': 'application/json',
             },
+            body: '{"frames": [{"frameID": "a"}]}'
         },
     };
 }
