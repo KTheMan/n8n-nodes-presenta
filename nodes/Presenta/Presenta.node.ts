@@ -1,3 +1,4 @@
+import { URLSearchParams } from 'url';
 import type {
     IExecuteFunctions,
     INodeExecutionData,
@@ -83,14 +84,14 @@ export class Presenta implements INodeType {
                 name: 'f2a_exportPurePDF',
                 type: 'boolean',
                 default: false,
-                description: 'Preserve vector elements in PDF',
+                description: 'Whether to preserve vector elements in PDF',
             },
             {
                 displayName: 'Cache Buster',
                 name: 'f2a_cacheBuster',
                 type: 'boolean',
                 default: true,
-                description: 'Disable cache on template update (for testing)',
+                description: 'Whether to disable cache on template update (for testing)',
             },
         ],
     };
@@ -119,7 +120,7 @@ export class Presenta implements INodeType {
                 };
 
                 // Get credentials
-                const credentials = this.getCredentials('presentaApi');
+                const credentials = await this.getCredentials('presentaApi');
                 if (!credentials || !credentials.token) {
                     throw new NodeOperationError(this.getNode(), 'No Presenta API token found. Please set PRESENTA_API_TOKEN in your environment.');
                 }

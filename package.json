@@ -1,15 +1,15 @@
 {
   "name": "n8n-nodes-presenta",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "n8n node for Presenta API integration.",
   "keywords": [
     "n8n-community-node-package"
   ],
   "license": "MIT",
-  "homepage": "",
+  "homepage": "knnygrdn.com",
   "author": {
     "name": "Kenny The Man",
-    "email": ""
+    "email": "k@knnygrdn.com"
   },
   "repository": {
     "type": "git",
@@ -40,6 +40,7 @@
     ]
   },
   "devDependencies": {
+    "@types/node": "^24.0.14",
     "@typescript-eslint/parser": "~8.32.0",
     "eslint": "^8.57.0",
     "eslint-plugin-n8n-nodes-base": "^1.16.3",

@@ -1,4 +1,4 @@
-import { ICredentialType, INodeProperties } from 'n8n-workflow';
+import { ICredentialType, INodeProperties, IHttpRequestMethods } from 'n8n-workflow';
 
 export class PresentaApi implements ICredentialType {
     name = 'presentaApi';
@@ -14,8 +14,17 @@ export class PresentaApi implements ICredentialType {
             typeOptions: {
                 password: true,
             },
-            description: 'Your Presenta API token. Recommended: use environment variable.',
-            env: 'PRESENTA_API_TOKEN',
+            description: 'Your Presenta API token.',
         },
     ];
+
+    test = {
+        request: {
+            method: 'GET' as IHttpRequestMethods,
+            url: 'https://www.presenta.cc/api/status',
+            headers: {
+                Authorization: '=Bearer {{$credentials.token}}',
+            },
+        },
+    };
 }
