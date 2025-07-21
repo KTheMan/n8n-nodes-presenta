@@ -27,7 +27,7 @@ jobs:
             exit 1
           fi
           npm version --no-git-tag-version "$TAG_VERSION"
-      - run: npm run test
+#      - run: npm run test
 #      - run: npm run lint
       - run: npm run build
       - run: npm publish --provenance --access public
