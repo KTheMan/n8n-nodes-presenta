@@ -149,13 +149,27 @@ export class Presenta implements INodeType {
                     url += `?${params.toString()}`;
                 }
 
-                // Make HTTP request
-                const response = await this.helpers.request({
+                // Make HTTP request for PDF (binary) response
+								const response = await this.helpers.request({
                     url,
                     ...options,
+                    responseType: 'arraybuffer',
                 });
 
-                returnData.push({ json: { response } });
+                // Prepare binary data for n8n
+                const fileName = f2a_filename || 'document.pdf';
+                const binaryData = await this.helpers.prepareBinaryData(
+                    Buffer.from(response),
+                    fileName,
+                    'application/pdf'
+                );
+
+                returnData.push({
+                    binary: {
+                        data: binaryData,
+                    },
+                    json: {},
+                });
             } catch (error) {
                 if (this.continueOnFail()) {
                     returnData.push({ json: { error: error.message } });
