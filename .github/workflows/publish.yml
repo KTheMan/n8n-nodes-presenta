@@ -1,0 +1,35 @@
+name: Publish Package to npmjs
+on:
+  release:
+    types: [ published ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm ci
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/}
+          echo "TAG_VERSION=$TAG_VERSION" >> $GITHUB_ENV
+      - name: Set version in package.json and package-lock.json
+        run: |
+          if [ -z "$TAG_VERSION" ]; then
+            echo "No tag version found. Skipping version sync."
+            exit 1
+          fi
+          npm version --no-git-tag-version "$TAG_VERSION"
+      - run: npm run test
+#      - run: npm run lint
+      - run: npm run build
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
