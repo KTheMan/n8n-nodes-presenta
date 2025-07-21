@@ -14,6 +14,7 @@ export class Presenta implements INodeType {
         group: ['transform'],
         version: 1,
         description: 'Interact with Presenta API to render documents/images using templates',
+        icon: { light: 'file:logo.svg', dark: 'file:logo.svg' },
         defaults: {
             name: 'Presenta',
         },
