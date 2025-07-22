@@ -35,6 +35,50 @@ export class Presenta implements INodeType {
         ],
         properties: [
             {
+                displayName: 'Options',
+                name: 'options',
+                type: 'collection',
+                placeholder: 'Add Option',
+                default: {},
+                options: [
+                    {
+                        displayName: 'Add Cache Buster',
+                        name: 'addCacheBuster',
+                        type: 'boolean',
+                        default: true,
+                        description: 'Whether to add f2a_cacheBuster to the payload',
+                    },
+                    {
+                        displayName: 'Add Debug Output',
+                        name: 'addDebug',
+                        type: 'boolean',
+                        default: false,
+                        description: 'Whether to add debug output to the payload (for troubleshooting)',
+                    },
+                    {
+                        displayName: 'Add Export File Format',
+                        name: 'addExportFileFormat',
+                        type: 'boolean',
+                        default: true,
+                        description: 'Whether to add f2a_exportFileFormat to the payload',
+                    },
+                    {
+                        displayName: 'Add Export Pure PDF',
+                        name: 'addExportPurePDF',
+                        type: 'boolean',
+                        default: true,
+                        description: 'Whether to add f2a_exportPurePDF to the payload',
+                    },
+                    {
+                        displayName: 'Add Filename',
+                        name: 'addFilename',
+                        type: 'boolean',
+                        default: true,
+                        description: 'Whether to add f2a_filename to the payload',
+                    },
+                ],
+            },
+            {
                 displayName: 'Endpoint',
                 name: 'endpoint',
                 type: 'options',
@@ -112,12 +156,20 @@ export class Presenta implements INodeType {
             try {
                 const endpoint = this.getNodeParameter('endpoint', i) as string;
                 const templateId = this.getNodeParameter('templateId', i) as string;
+
                 let payload = this.getNodeParameter('payload', i) as unknown;
                 const f2a_exportFileFormat = this.getNodeParameter('f2a_exportFileFormat', i) as string;
                 const f2a_filename = this.getNodeParameter('f2a_filename', i) as string;
                 const f2a_exportPurePDF = this.getNodeParameter('f2a_exportPurePDF', i) as boolean;
                 const f2a_cacheBuster = this.getNodeParameter('f2a_cacheBuster', i) as boolean;
                 const debug = this.getNodeParameter('debug', i, false) as boolean;
+                const optionsParam = this.getNodeParameter('options', i, {}) as {
+                    addExportFileFormat?: boolean;
+                    addFilename?: boolean;
+                    addExportPurePDF?: boolean;
+                    addCacheBuster?: boolean;
+                    addDebug?: boolean;
+                };
 
                 // Parse payload if it's a string
                 if (typeof payload === 'string') {
@@ -131,14 +183,23 @@ export class Presenta implements INodeType {
                     throw new NodeOperationError(this.getNode(), 'Payload must be a JSON object.');
                 }
 
-                // Add special properties to payload
-                const payloadWithExtras = {
-                    ...payload,
-                    f2a_exportFileFormat,
-                    f2a_filename,
-                    f2a_exportPurePDF,
-                    f2a_cacheBuster,
-                };
+                // Add export fields individually if enabled
+                let payloadWithExtras: any = { ...payload };
+                if (optionsParam.addExportFileFormat !== false) {
+                    payloadWithExtras.f2a_exportFileFormat = f2a_exportFileFormat;
+                }
+                if (optionsParam.addFilename !== false) {
+                    payloadWithExtras.f2a_filename = f2a_filename;
+                }
+                if (optionsParam.addExportPurePDF !== false) {
+                    payloadWithExtras.f2a_exportPurePDF = f2a_exportPurePDF;
+                }
+                if (optionsParam.addCacheBuster !== false) {
+                    payloadWithExtras.f2a_cacheBuster = f2a_cacheBuster;
+                }
+                if (optionsParam.addDebug === true) {
+                    payloadWithExtras.debug = true;
+                }
 
                 // Get credentials
                 const credentials = await this.getCredentials('presentaApi');
@@ -210,6 +271,7 @@ export class Presenta implements INodeType {
                 );
 
                 if (debug) {
+                    const responseBuffer = Buffer.from(response);
                     returnData.push({
                         binary: {
                             data: binaryData,
@@ -218,7 +280,9 @@ export class Presenta implements INodeType {
                             debug: {
                                 payload: payloadWithExtras,
                                 request: requestDetails,
-                                response: Buffer.from(response).toString('base64'),
+                                response: responseBuffer.toString('base64'),
+                                responseFirst100Base64: responseBuffer.slice(0, 100).toString('base64'),
+                                responseFirst100Utf8: responseBuffer.slice(0, 100).toString('utf8'),
                             },
                         },
                     });
