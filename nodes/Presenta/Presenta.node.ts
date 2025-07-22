@@ -144,12 +144,17 @@ export class Presenta implements INodeType {
                     throw new NodeOperationError(this.getNode(), 'Payload must be a JSON object.');
                 }
 
-                // Add export/debug fields from options if set
+                // Add export fields from options if set (do NOT add debug to payload)
                 let payloadWithExtras: any = { ...payload };
                 if (optionsParam.f2a_exportFileFormat !== undefined) {
                     payloadWithExtras.f2a_exportFileFormat = optionsParam.f2a_exportFileFormat;
                 }
-                if (optionsParam.f2a_filename !== undefined) {
+                // Only include f2a_filename if set and not empty or default
+                if (
+                    optionsParam.f2a_filename !== undefined &&
+                    optionsParam.f2a_filename !== '' &&
+                    optionsParam.f2a_filename !== 'document'
+                ) {
                     payloadWithExtras.f2a_filename = optionsParam.f2a_filename;
                 }
                 if (optionsParam.f2a_exportPurePDF !== undefined) {
@@ -157,9 +162,6 @@ export class Presenta implements INodeType {
                 }
                 if (optionsParam.f2a_cacheBuster !== undefined) {
                     payloadWithExtras.f2a_cacheBuster = optionsParam.f2a_cacheBuster;
-                }
-                if (optionsParam.debug === true) {
-                    payloadWithExtras.debug = true;
                 }
 
                 // For backward compatibility, set these for file naming and headers
@@ -237,6 +239,17 @@ export class Presenta implements INodeType {
 
                 if (optionsParam.debug === true) {
                     const responseBuffer = Buffer.from(response);
+                    // Build a curl command for manual testing
+                    const curlCommand = [
+                        'curl',
+                        '-X', endpoint === 'render' ? 'POST' : 'GET',
+                        `'${url}'`,
+                        '-H', `'Authorization: Bearer ${credentials.token}'`,
+                        '-H', `'Content-Type: application/json'`,
+                        '-H', `'Accept: ${acceptHeader}'`,
+                        endpoint === 'render' ? `--data-raw '${JSON.stringify(payloadWithExtras)}'` : '',
+                        '-o', `'output.pdf'`
+                    ].filter(Boolean).join(' ');
                     returnData.push({
                         binary: {
                             data: binaryData,
@@ -248,6 +261,7 @@ export class Presenta implements INodeType {
                                 response: responseBuffer.toString('base64'),
                                 responseFirst100Base64: responseBuffer.slice(0, 100).toString('base64'),
                                 responseFirst100Utf8: responseBuffer.slice(0, 100).toString('utf8'),
+                                curl: curlCommand,
                             },
                         },
                     });
