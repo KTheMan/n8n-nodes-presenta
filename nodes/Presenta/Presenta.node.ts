@@ -199,7 +199,6 @@ export class Presenta implements INodeType {
                     headers: {
                         Authorization: `Bearer ${credentials.token}`,
                         // 'Content-Type' will be set below only if there is a body
-                        Accept: undefined, // Explicitly disable Accept header
                     },
                 };
 
