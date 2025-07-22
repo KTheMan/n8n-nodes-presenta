@@ -198,12 +198,17 @@ export class Presenta implements INodeType {
                     method: endpoint === 'render' ? 'POST' : 'GET',
                     headers: {
                         Authorization: `Bearer ${credentials.token}`,
-                        'Content-Type': 'application/json',
+                        // 'Content-Type' will be set below only if there is a body
+                        Accept: undefined, // Explicitly disable Accept header
                     },
                 };
 
+                // Only set Content-Type and body if payloadWithExtras is not empty
                 if (endpoint === 'render') {
-                    options.body = JSON.stringify(payloadWithExtras);
+                    if (Object.keys(payloadWithExtras).length > 0) {
+                        options.body = JSON.stringify(payloadWithExtras);
+                        options.headers['Content-Type'] = 'application/json';
+                    }
                 } else if (endpoint === 'cached') {
                     // For cached, pass payload as query params
                     const params = new URLSearchParams();
@@ -213,7 +218,7 @@ export class Presenta implements INodeType {
                         }
                     }
                     url += `?${params.toString()}`;
-                }
+                };
 
                 // Make HTTP request for binary response
                 const requestDetails = {
