@@ -94,6 +94,13 @@ export class Presenta implements INodeType {
                 default: true,
                 description: 'Whether to disable cache on template update (for testing)',
             },
+            {
+                displayName: 'Debug Output',
+                name: 'debug',
+                type: 'boolean',
+                default: false,
+                description: 'Whether to output all constructed request details and response for debugging',
+            },
         ],
     };
 
@@ -110,6 +117,7 @@ export class Presenta implements INodeType {
                 const f2a_filename = this.getNodeParameter('f2a_filename', i) as string;
                 const f2a_exportPurePDF = this.getNodeParameter('f2a_exportPurePDF', i) as boolean;
                 const f2a_cacheBuster = this.getNodeParameter('f2a_cacheBuster', i) as boolean;
+                const debug = this.getNodeParameter('debug', i, false) as boolean;
 
                 // Add special properties to payload
                 payload = {
@@ -151,11 +159,12 @@ export class Presenta implements INodeType {
                 }
 
                 // Make HTTP request for PDF (binary) response
-								const response = await this.helpers.request({
+                const requestDetails = {
                     url,
                     ...options,
                     responseType: 'arraybuffer',
-                });
+                };
+                const response = await this.helpers.request(requestDetails);
 
                 // Prepare binary data for n8n
                 const fileName = f2a_filename || 'document.pdf';
@@ -165,12 +174,27 @@ export class Presenta implements INodeType {
                     'application/pdf'
                 );
 
-                returnData.push({
-                    binary: {
-                        data: binaryData,
-                    },
-                    json: {},
-                });
+                if (debug) {
+                    returnData.push({
+                        binary: {
+                            data: binaryData,
+                        },
+                        json: {
+                            debug: {
+                                payload,
+                                request: requestDetails,
+                                response: Buffer.from(response).toString('base64'),
+                            },
+                        },
+                    });
+                } else {
+                    returnData.push({
+                        binary: {
+                            data: binaryData,
+                        },
+                        json: {},
+                    });
+                }
             } catch (error) {
                 if (this.continueOnFail()) {
                     returnData.push({ json: { error: error.message } });
