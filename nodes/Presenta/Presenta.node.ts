@@ -174,25 +174,20 @@ export class Presenta implements INodeType {
                     throw new NodeOperationError(this.getNode(), 'No Presenta API token found. Please set PRESENTA_API_TOKEN in your environment.');
                 }
 
-                // Set Accept header and MIME type based on export format
-                let acceptHeader = 'application/pdf';
+                // Set MIME type based on export format
                 let mimeType = 'application/pdf';
                 switch (f2a_exportFileFormat) {
                     case 'png':
-                        acceptHeader = 'image/png';
                         mimeType = 'image/png';
                         break;
                     case 'jpeg':
-                        acceptHeader = 'image/jpeg';
                         mimeType = 'image/jpeg';
                         break;
                     case 'webp':
-                        acceptHeader = 'image/webp';
                         mimeType = 'image/webp';
                         break;
                     case 'pdf':
                     default:
-                        acceptHeader = 'application/pdf';
                         mimeType = 'application/pdf';
                         break;
                 }
@@ -204,7 +199,6 @@ export class Presenta implements INodeType {
                     headers: {
                         Authorization: `Bearer ${credentials.token}`,
                         'Content-Type': 'application/json',
-                        Accept: acceptHeader,
                     },
                 };
 
@@ -246,7 +240,6 @@ export class Presenta implements INodeType {
                         `'${url}'`,
                         '-H', `'Authorization: Bearer ${credentials.token}'`,
                         '-H', `'Content-Type: application/json'`,
-                        '-H', `'Accept: ${acceptHeader}'`,
                         endpoint === 'render' ? `--data-raw '${JSON.stringify(payloadWithExtras)}'` : '',
                         '-o', `'output.pdf'`
                     ].filter(Boolean).join(' ');
