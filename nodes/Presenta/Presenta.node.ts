@@ -76,6 +76,13 @@ export class Presenta implements INodeType {
                         description: 'Whether to disable cache on template update (for testing)',
                     },
                     {
+                        displayName: 'Custom Endpoint (Full URL)',
+                        name: 'customEndpoint',
+                        type: 'string',
+                        default: '',
+                        description: 'If set, use this as the full request URL (overrides Endpoint and Template ID fields)',
+                    },
+                    {
                         displayName: 'Debug Output',
                         name: 'debug',
                         type: 'boolean',
@@ -130,6 +137,7 @@ export class Presenta implements INodeType {
                     f2a_exportPurePDF?: boolean;
                     f2a_cacheBuster?: boolean;
                     debug?: boolean;
+                    customEndpoint?: string; // Added customEndpoint to optionsParam
                 };
 
                 // Parse payload if it's a string
@@ -193,11 +201,18 @@ export class Presenta implements INodeType {
                 }
 
                 // Build request
-                let url = `https://www.presenta.cc/api/${endpoint}/${templateId}`;
+
+                // Support custom endpoint override
+                const customEndpoint = optionsParam.customEndpoint as string | undefined;
+                let url = customEndpoint && customEndpoint.trim() !== ''
+                    ? customEndpoint.trim()
+                    : `https://www.presenta.cc/api/${endpoint}/${templateId}`;
+
                 let options: any = {
                     method: endpoint === 'render' ? 'POST' : 'GET',
                     headers: {
                         Authorization: `Bearer ${credentials.token}`,
+                        Accept: 'application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9, image/*;q=0.8, */*;q=0.7',
                         // 'Content-Type' will be set below only if there is a body
                     },
                 };
