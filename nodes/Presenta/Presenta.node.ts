@@ -238,7 +238,7 @@ export class Presenta implements INodeType {
                 const requestDetails = {
                     url,
                     ...options,
-                    responseType: 'arraybuffer',
+                    encoding: null, // Ensure Buffer is returned
                 };
                 const response = await this.helpers.request(requestDetails);
 
