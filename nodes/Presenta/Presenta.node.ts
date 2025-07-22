@@ -146,6 +146,29 @@ export class Presenta implements INodeType {
                     throw new NodeOperationError(this.getNode(), 'No Presenta API token found. Please set PRESENTA_API_TOKEN in your environment.');
                 }
 
+                // Set Accept header and MIME type based on export format
+                let acceptHeader = 'application/pdf';
+                let mimeType = 'application/pdf';
+                switch (f2a_exportFileFormat) {
+                    case 'png':
+                        acceptHeader = 'image/png';
+                        mimeType = 'image/png';
+                        break;
+                    case 'jpeg':
+                        acceptHeader = 'image/jpeg';
+                        mimeType = 'image/jpeg';
+                        break;
+                    case 'webp':
+                        acceptHeader = 'image/webp';
+                        mimeType = 'image/webp';
+                        break;
+                    case 'pdf':
+                    default:
+                        acceptHeader = 'application/pdf';
+                        mimeType = 'application/pdf';
+                        break;
+                }
+
                 // Build request
                 let url = `https://www.presenta.cc/api/${endpoint}/${templateId}`;
                 let options: any = {
@@ -153,7 +176,7 @@ export class Presenta implements INodeType {
                     headers: {
                         Authorization: `Bearer ${credentials.token}`,
                         'Content-Type': 'application/json',
-                        Accept: 'application/json',
+                        Accept: acceptHeader,
                     },
                 };
 
@@ -170,7 +193,7 @@ export class Presenta implements INodeType {
                     url += `?${params.toString()}`;
                 }
 
-                // Make HTTP request for PDF (binary) response
+                // Make HTTP request for binary response
                 const requestDetails = {
                     url,
                     ...options,
@@ -179,11 +202,11 @@ export class Presenta implements INodeType {
                 const response = await this.helpers.request(requestDetails);
 
                 // Prepare binary data for n8n
-                const fileName = f2a_filename || 'document.pdf';
+                const fileName = f2a_filename || `document.${f2a_exportFileFormat || 'pdf'}`;
                 const binaryData = await this.helpers.prepareBinaryData(
                     Buffer.from(response),
                     fileName,
-                    'application/pdf'
+                    mimeType
                 );
 
                 if (debug) {
