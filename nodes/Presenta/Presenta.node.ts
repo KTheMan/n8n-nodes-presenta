@@ -242,6 +242,19 @@ export class Presenta implements INodeType {
                 };
                 const response = await this.helpers.request(requestDetails);
 
+                // Debug: log response type and length
+                const responseType = Object.prototype.toString.call(response);
+                let responseLength: number | undefined = undefined;
+                if (Buffer.isBuffer(response)) {
+                    responseLength = response.length;
+                } else if (response instanceof ArrayBuffer) {
+                    responseLength = response.byteLength;
+                } else if (ArrayBuffer.isView(response)) {
+                    responseLength = response.byteLength;
+                } else if (typeof response === 'string') {
+                    responseLength = response.length;
+                }
+
                 // Ensure response is a Buffer for binary data
                 let responseBuffer: Buffer;
                 if (Buffer.isBuffer(response)) {
@@ -282,6 +295,8 @@ export class Presenta implements INodeType {
                             debug: {
                                 payload: payloadWithExtras,
                                 request: requestDetails,
+                                responseType,
+                                responseLength,
                                 response: responseBuffer.toString('base64'),
                                 responseFirst100Base64: responseBuffer.slice(0, 100).toString('base64'),
                                 responseFirst100Utf8: responseBuffer.slice(0, 100).toString('utf8'),
