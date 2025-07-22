@@ -112,15 +112,27 @@ export class Presenta implements INodeType {
             try {
                 const endpoint = this.getNodeParameter('endpoint', i) as string;
                 const templateId = this.getNodeParameter('templateId', i) as string;
-                let payload = this.getNodeParameter('payload', i) as object;
+                let payload = this.getNodeParameter('payload', i) as unknown;
                 const f2a_exportFileFormat = this.getNodeParameter('f2a_exportFileFormat', i) as string;
                 const f2a_filename = this.getNodeParameter('f2a_filename', i) as string;
                 const f2a_exportPurePDF = this.getNodeParameter('f2a_exportPurePDF', i) as boolean;
                 const f2a_cacheBuster = this.getNodeParameter('f2a_cacheBuster', i) as boolean;
                 const debug = this.getNodeParameter('debug', i, false) as boolean;
 
+                // Parse payload if it's a string
+                if (typeof payload === 'string') {
+                    try {
+                        payload = JSON.parse(payload);
+                    } catch (err) {
+                        throw new NodeOperationError(this.getNode(), 'Payload is not valid JSON.');
+                    }
+                }
+                if (typeof payload !== 'object' || payload === null) {
+                    throw new NodeOperationError(this.getNode(), 'Payload must be a JSON object.');
+                }
+
                 // Add special properties to payload
-                payload = {
+                const payloadWithExtras = {
                     ...payload,
                     f2a_exportFileFormat,
                     f2a_filename,
@@ -146,11 +158,11 @@ export class Presenta implements INodeType {
                 };
 
                 if (endpoint === 'render') {
-                    options.body = JSON.stringify(payload);
+                    options.body = JSON.stringify(payloadWithExtras);
                 } else if (endpoint === 'cached') {
                     // For cached, pass payload as query params
                     const params = new URLSearchParams();
-                    for (const [key, value] of Object.entries(payload)) {
+                    for (const [key, value] of Object.entries(payloadWithExtras)) {
                         if (typeof value !== 'undefined') {
                             params.append(key, String(value));
                         }
@@ -181,7 +193,7 @@ export class Presenta implements INodeType {
                         },
                         json: {
                             debug: {
-                                payload,
+                                payload: payloadWithExtras,
                                 request: requestDetails,
                                 response: Buffer.from(response).toString('base64'),
                             },
