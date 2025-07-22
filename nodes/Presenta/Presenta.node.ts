@@ -242,16 +242,28 @@ export class Presenta implements INodeType {
                 };
                 const response = await this.helpers.request(requestDetails);
 
+                // Ensure response is a Buffer for binary data
+                let responseBuffer: Buffer;
+                if (Buffer.isBuffer(response)) {
+                    responseBuffer = response;
+                } else if (response instanceof ArrayBuffer) {
+                    responseBuffer = Buffer.from(new Uint8Array(response));
+                } else if (ArrayBuffer.isView(response)) {
+                    responseBuffer = Buffer.from(response.buffer, response.byteOffset, response.byteLength);
+                } else {
+                    // Fallback: try to create Buffer (may be string or other type)
+                    responseBuffer = Buffer.from(response);
+                }
+
                 // Prepare binary data for n8n
                 const fileName = f2a_filename || `document.${f2a_exportFileFormat || 'pdf'}`;
                 const binaryData = await this.helpers.prepareBinaryData(
-                    Buffer.from(response),
+                    responseBuffer,
                     fileName,
                     mimeType
                 );
 
                 if (optionsParam.debug === true) {
-                    const responseBuffer = Buffer.from(response);
                     // Build a curl command for manual testing
                     const curlCommand = [
                         'curl',
